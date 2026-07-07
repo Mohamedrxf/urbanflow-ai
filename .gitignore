@@ -1,0 +1,83 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Build outputs
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# OS files
+Thumbs.db
+
+# Testing
+coverage/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# AI/ML artifacts
+models/*.pkl
+models/*.h5
+models/*.pt
+models/*.pth
+datasets/*.csv
+datasets/*.parquet
+*.onnx
+
+# Docker
+docker-compose.override.yml
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Frontend build
+frontend/dist/
+frontend/.vite/
+
+# Backend
+backend/.env
+backend/*.db
+
+# Documentation build
+docs/_build/
+docs/.vitepress/dist/
+
+# Presentation
+presentation/*.pptx
+presentation/*.key

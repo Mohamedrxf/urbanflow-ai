@@ -1,0 +1,20 @@
+# UrbanFlow AI
+# AI-Powered Fleet Traffic Intelligence Platform
+
+# This file is intentionally left unconfigured during Milestone 1.
+
+# Docker services will be added in future milestones after:
+# - Frontend foundation
+# - Backend APIs
+# - Database implementation
+# - AI Engine implementation
+
+# Planned services may include:
+# - Frontend
+# - Backend
+# - Database (initially SQLite, subject to future architectural decisions)
+# - AI Engine (optional)
+
+# No containers are configured at this stage.
+
+
