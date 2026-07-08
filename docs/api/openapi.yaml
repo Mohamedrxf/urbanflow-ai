@@ -1,0 +1,60 @@
+openapi: 3.0.0
+info:
+  title: TrafficShield (UrbanFlow AI) API
+  description: |
+    OpenAPI specification for the TrafficShield API.
+    
+    **Note:** This is a placeholder specification. API definitions will be added in subsequent phases.
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+
+servers:
+  - url: https://api.example.com/v1
+    description: Production server
+  - url: https://staging-api.example.com/v1
+    description: Staging server
+
+security:
+  - ApiKeyAuth: []
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for authentication
+
+paths:
+  # Placeholder paths - will be defined in future milestones
+  /health:
+    get:
+      summary: Health check endpoint
+      description: Returns the health status of the API
+      operationId: getHealth
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "healthy"
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+  # Additional endpoints will be added here in future milestones
+
+tags:
+  - name: Health
+    description: Health and status endpoints
+  # Additional tags will be added here in future milestones
