@@ -1,5 +1,9 @@
 import KpiCard from "../components/dashboard/KpiCard";
 import FleetStatus from "../components/dashboard/FleetStatus";
+import TrafficOverview from "../components/dashboard/TrafficOverview";
+import PredictionWidget from "../components/dashboard/PredictionWidget";
+import AlertPanel from "../components/dashboard/AlertPanel";
+import MapPlaceholder from "../components/dashboard/MapPlaceholder";
 
 export default function Dashboard() {
   const cards = [
@@ -24,6 +28,18 @@ export default function Dashboard() {
       </div>
       <div className="mt-6">
         <FleetStatus active={248} idle={18} maintenance={6} />
+      </div>
+      <div className="mt-6">
+        <TrafficOverview congestionLevel="Moderate" avgSpeed="42 km/h" incidents={7} />
+      </div>
+      <div className="mt-6">
+        <PredictionWidget accuracy="92%" predictedDelay="4 min" optimizedRoutes={18} />
+      </div>
+      <div className="mt-6">
+        <AlertPanel totalAlerts={12} criticalAlerts={3} warningAlerts={9} />
+      </div>
+      <div className="mt-6">
+        <MapPlaceholder title="Live Traffic Map" />
       </div>
     </div>
   );
