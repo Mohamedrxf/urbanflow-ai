@@ -1,4 +1,5 @@
 from backend.models.route import RouteOptimization
+from backend.schemas.route import RouteCreate
 
 
 class RouteRepository:
@@ -15,8 +16,9 @@ class RouteRepository:
             .first()
         )
 
-    def create(self, route):
-        self.db.add(route)
+    def create(self, route: RouteCreate):
+        db_route = RouteOptimization(**route.model_dump())
+        self.db.add(db_route)
         self.db.commit()
-        self.db.refresh(route)
-        return route
+        self.db.refresh(db_route)
+        return db_route

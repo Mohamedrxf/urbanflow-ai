@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 from backend.config.database import get_db
 from backend.repositories.road_incident_repository import RoadIncidentRepository
@@ -16,7 +16,10 @@ def list_road_incidents(db=Depends(get_db)):
 @router.get("/{id}", response_model=RoadIncidentResponse)
 def get_road_incident(id: int, db=Depends(get_db)):
     repository = RoadIncidentRepository(db)
-    return repository.get_by_id(id)
+    road_incident = repository.get_by_id(id)
+    if road_incident is None:
+        raise HTTPException(status_code=404, detail="Road incident not found")
+    return road_incident
 
 
 @router.post("/", response_model=RoadIncidentResponse)

@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -6,11 +8,20 @@ from backend.api.vehicle import router as vehicle_router
 from backend.api.traffic import router as traffic_router
 from backend.api.road_incident import router as road_incident_router
 from backend.api.route import router as route_router
+from backend.config.database import Base, engine
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    Base.metadata.create_all(bind=engine)
+    yield
+
 
 app = FastAPI(
     title="UrbanFlow AI API",
     description="AI-Powered Fleet Traffic Intelligence Platform",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan,
 )
 
 # CORS middleware

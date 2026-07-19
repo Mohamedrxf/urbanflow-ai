@@ -1,4 +1,5 @@
 from backend.models.traffic import Traffic
+from backend.schemas.traffic import TrafficCreate
 
 
 class TrafficRepository:
@@ -11,8 +12,9 @@ class TrafficRepository:
     def get_by_id(self, traffic_id: int):
         return self.db.query(Traffic).filter(Traffic.id == traffic_id).first()
 
-    def create(self, traffic):
-        self.db.add(traffic)
+    def create(self, traffic: TrafficCreate):
+        db_traffic = Traffic(**traffic.model_dump())
+        self.db.add(db_traffic)
         self.db.commit()
-        self.db.refresh(traffic)
-        return traffic
+        self.db.refresh(db_traffic)
+        return db_traffic
