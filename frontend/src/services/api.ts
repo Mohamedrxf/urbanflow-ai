@@ -1,8 +1,8 @@
-// API service layer for UrbanFlow AI
-// Placeholder for future implementation
+import axios from "axios";
 
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const api = axios.create({
+  baseURL: "http://localhost:8000",
+  timeout: 10000,
+});
 
-export const apiClient = {
-    // Implementation will be added in future phases
-};
+export default api;
