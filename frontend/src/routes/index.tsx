@@ -1,10 +1,9 @@
 import { createBrowserRouter } from 'react-router-dom'
-
-const Home = () => <h1>UrbanFlow AI</h1>
+import Dashboard from '../pages/Dashboard'
 
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <Home />,
+    element: <Dashboard />,
   },
 ])
