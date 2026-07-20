@@ -17,6 +17,15 @@ class VehicleCreate(VehicleBase):
     pass
 
 
+class VehicleUpdate(BaseModel):
+    vehicle_type: str | None = None
+    driver_name: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
+    speed: float | None = None
+    status: str | None = None
+
+
 class VehicleResponse(VehicleBase):
     id: int
 

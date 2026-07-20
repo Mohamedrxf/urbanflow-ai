@@ -9,14 +9,30 @@ import { getVehicles } from "../services/vehicleService";
 import { getTraffic } from "../services/trafficService";
 import { getIncidents } from "../services/incidentService";
 import { getRoutes } from "../services/routeService";
+import { useWebSocket } from "../hooks/useWebSocket";
 
 export default function Dashboard() {
+  const { isConnected, lastMessage } = useWebSocket();
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [traffic, setTraffic] = useState<any[]>([]);
   const [incidents, setIncidents] = useState<any[]>([]);
   const [routes, setRoutes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (lastMessage) {
+      console.log("WebSocket:", lastMessage);
+      try {
+        const data = JSON.parse(lastMessage);
+        if (data.event === "vehicle_updated") {
+          loadDashboardData();
+        }
+      } catch {
+        // ignore non-JSON messages
+      }
+    }
+  }, [lastMessage]);
 
   const loadDashboardData = async () => {
     try {
@@ -77,7 +93,10 @@ export default function Dashboard() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-gray-900 mb-6">Dashboard</h1>
+      <div className="flex items-center gap-2 mb-6">
+        <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
+        <span className="text-sm">{isConnected ? "🟢 Live" : "🔴 Offline"}</span>
+      </div>
       {error && <p className="text-red-600">{error}</p>}
       {!error && loading && <p className="text-gray-600">Loading dashboard data...</p>}
       {!error && !loading && (
