@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy import Boolean, Column, DateTime, Integer, String
 
 from backend.models.base import Base
@@ -13,4 +15,4 @@ class User(Base):
     full_name = Column(String)
     role = Column(String, default="fleet_manager")
     is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime)
+    created_at = Column(DateTime, default=datetime.utcnow)
