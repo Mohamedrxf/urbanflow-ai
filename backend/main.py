@@ -8,6 +8,7 @@ from backend.api.vehicle import router as vehicle_router
 from backend.api.traffic import router as traffic_router
 from backend.api.road_incident import router as road_incident_router
 from backend.api.route import router as route_router
+from backend.api.auth import router as auth_router
 from backend.config.database import Base, engine
 
 
@@ -38,6 +39,7 @@ app.include_router(vehicle_router)
 app.include_router(traffic_router)
 app.include_router(road_incident_router)
 app.include_router(route_router)
+app.include_router(auth_router)
 
 
 @app.get("/")
