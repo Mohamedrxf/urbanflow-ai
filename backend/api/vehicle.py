@@ -2,7 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from backend.config.database import get_db
 from backend.repositories.vehicle_repository import VehicleRepository
-from backend.schemas.vehicle import VehicleCreate, VehicleResponse
+from backend.schemas.vehicle import VehicleCreate, VehicleResponse, VehicleUpdate
+from backend.api.websocket import manager
+from backend.models.vehicle import Vehicle
+from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/vehicles", tags=["Vehicles"])
 
@@ -23,6 +26,57 @@ def get_vehicle(vehicle_id: str, db=Depends(get_db)):
 
 
 @router.post("/", response_model=VehicleResponse)
-def create_vehicle(vehicle: VehicleCreate, db=Depends(get_db)):
+async def create_vehicle(vehicle: VehicleCreate, db=Depends(get_db)):
     repository = VehicleRepository(db)
-    return repository.create(vehicle)
+    created = repository.create(vehicle)
+    import json
+    from datetime import datetime
+    message = json.dumps({
+        "event": "vehicle_updated",
+        "action": "create",
+        "vehicle_id": created.vehicle_id,
+        "timestamp": datetime.utcnow().isoformat(),
+    })
+    await manager.broadcast(message)
+    return created
+
+
+@router.put("/{vehicle_id}", response_model=VehicleResponse)
+async def update_vehicle(vehicle_id: str, vehicle: VehicleUpdate, db: Session = Depends(get_db)):
+    db_vehicle = db.query(Vehicle).filter(Vehicle.vehicle_id == vehicle_id).first()
+    if db_vehicle is None:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    update_data = vehicle.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(db_vehicle, key, value)
+    db.commit()
+    db.refresh(db_vehicle)
+    import json
+    from datetime import datetime
+    message = json.dumps({
+        "event": "vehicle_updated",
+        "action": "update",
+        "vehicle_id": db_vehicle.vehicle_id,
+        "timestamp": datetime.utcnow().isoformat(),
+    })
+    await manager.broadcast(message)
+    return db_vehicle
+
+
+@router.delete("/{vehicle_id}")
+async def delete_vehicle(vehicle_id: str, db: Session = Depends(get_db)):
+    db_vehicle = db.query(Vehicle).filter(Vehicle.vehicle_id == vehicle_id).first()
+    if db_vehicle is None:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    db.delete(db_vehicle)
+    db.commit()
+    import json
+    from datetime import datetime
+    message = json.dumps({
+        "event": "vehicle_updated",
+        "action": "delete",
+        "vehicle_id": vehicle_id,
+        "timestamp": datetime.utcnow().isoformat(),
+    })
+    await manager.broadcast(message)
+    return {"detail": "Vehicle deleted"}
