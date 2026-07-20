@@ -11,12 +11,18 @@ from backend.api.route import router as route_router
 from backend.api.auth import router as auth_router
 from backend.api.websocket import router as websocket_router
 from backend.config.database import Base, engine
+from backend.services.gps_simulator import GPSSimulator
+
+
+gps_simulator = GPSSimulator()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
+    await gps_simulator.start()
     yield
+    await gps_simulator.stop()
 
 
 app = FastAPI(
