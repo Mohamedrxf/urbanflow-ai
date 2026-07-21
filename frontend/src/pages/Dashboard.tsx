@@ -10,14 +10,71 @@ import { getTraffic } from "../services/trafficService";
 import { getIncidents } from "../services/incidentService";
 import { getRoutes } from "../services/routeService";
 import { useWebSocket } from "../hooks/useWebSocket";
+import api from "../services/api";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+
+  const getPredictions = () => api.get("/predictions");
+
+  const getCongestionBadgeClasses = (level: any) => {
+    const value = (level || "").toString().toLowerCase();
+    if (value === "low") return "bg-green-100 text-green-800";
+    if (value === "medium") return "bg-yellow-100 text-yellow-800";
+    if (value === "high") return "bg-red-100 text-red-800";
+    return "bg-gray-100 text-gray-800";
+  };
+
+  const getRecommendations = (predictedCongestion: any) => {
+    const value = (predictedCongestion || "").toString().toLowerCase();
+    if (value === "high") {
+      return [
+        "Recommend rerouting vehicles",
+        "Suggest avoiding the affected road",
+        "Suggest increasing traffic signal priority",
+      ];
+    }
+    if (value === "medium") {
+      return [
+        "Recommend monitoring traffic",
+        "Suggest alternative routes if available",
+      ];
+    }
+    if (value === "low") {
+      return ["Traffic flow is normal."];
+    }
+    return ["Traffic flow is normal."];
+  };
+
+  const getCongestionValue = (level: any) => {
+    const value = (level || "").toString().toLowerCase();
+    if (value === "low") return 1;
+    if (value === "medium") return 2;
+    if (value === "high") return 3;
+    return 0;
+  };
+
+  const generatePredictionHistory = (predictionList: any[]) => {
+    const now = new Date();
+    const history: any[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const time = new Date(now.getTime() - i * 15 * 60 * 1000);
+      const entry: any = { time: time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) };
+      predictionList.forEach((prediction) => {
+        entry[prediction.road_id] = getCongestionValue(prediction.predicted_congestion);
+      });
+      history.push(entry);
+    }
+    return history;
+  };
 
 export default function Dashboard() {
   const { isConnected, lastMessage } = useWebSocket();
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [traffic, setTraffic] = useState<any[]>([]);
   const [incidents, setIncidents] = useState<any[]>([]);
-  const [routes, setRoutes] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+   const [routes, setRoutes] = useState<any[]>([]);
+   const [predictions, setPredictions] = useState<any[]>([]);
+   void predictions;
+   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedVehicle, setSelectedVehicle] = useState<any | null>(null);
 
@@ -36,6 +93,16 @@ export default function Dashboard() {
           );
         } else if (data.event === "vehicle_updated") {
           loadDashboardData();
+        } else if (data.event === "prediction_updated") {
+          setPredictions((prev) => {
+            const index = prev.findIndex((p: any) => p.road_id === data.road_id);
+            if (index >= 0) {
+              const updated = [...prev];
+              updated[index] = { ...updated[index], ...data };
+              return updated;
+            }
+            return [...prev, data];
+          });
         }
       } catch {
         // ignore non-JSON messages
@@ -56,6 +123,9 @@ export default function Dashboard() {
 
       const routesResponse = await getRoutes();
       setRoutes(routesResponse.data);
+
+      const predictionsResponse = await getPredictions();
+      setPredictions(predictionsResponse.data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load dashboard data");
     } finally {
@@ -131,6 +201,76 @@ export default function Dashboard() {
           </div>
           <div className="mt-6">
             <AlertPanel totalAlerts={dashboardMetrics.totalAlerts} criticalAlerts={dashboardMetrics.criticalAlerts} warningAlerts={dashboardMetrics.warningAlerts} />
+          </div>
+          <div className="mt-6">
+            <h3 className="text-sm font-medium text-gray-600 mb-3">🤖 AI Traffic Predictions</h3>
+            {predictions.length === 0 ? (
+              <p className="text-sm text-gray-500">No AI predictions available.</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                {predictions.map((prediction: any) => (
+                  <div key={prediction.road_id} className="rounded-lg border border-gray-200 p-4 bg-white">
+                    <h4 className="text-sm font-medium text-gray-900 mb-2">{prediction.road_id}</h4>
+                    <div className="flex flex-col gap-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Current Congestion</span>
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getCongestionBadgeClasses(prediction.current_congestion)}`}>
+                          {prediction.current_congestion}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Predicted Congestion</span>
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getCongestionBadgeClasses(prediction.predicted_congestion)}`}>
+                          {prediction.predicted_congestion}
+                        </span>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Confidence</span>
+                          <span className="font-medium">{Math.round(prediction.confidence * 100)}%</span>
+                        </div>
+                        <div className="w-full h-2 bg-gray-200 rounded-full">
+                          <div className="h-2 rounded-full bg-blue-500" style={{ width: `${prediction.confidence * 100}%` }}></div>
+                        </div>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Prediction Window</span>
+                        <span className="font-medium">{prediction.prediction_minutes} min</span>
+                      </div>
+                      <div className="rounded-lg border border-gray-200 p-3 bg-gray-50">
+                        <p className="text-xs font-medium text-gray-700 mb-1">🤖 Recommendation</p>
+                        <ul className="list-disc list-inside text-xs text-gray-600 space-y-0.5">
+                          {getRecommendations(prediction.predicted_congestion).map((item, idx) => (
+                            <li key={idx}>{item}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="mt-6">
+            <h3 className="text-sm font-medium text-gray-600 mb-3">📈 AI Prediction Trends</h3>
+            {predictions.length === 0 ? (
+              <p className="text-sm text-gray-500">No prediction history available.</p>
+            ) : (
+              <div className="rounded-lg border border-gray-200 p-4 bg-white">
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={generatePredictionHistory(predictions)}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="time" />
+                    <YAxis type="number" domain={[0, 3]} ticks={[1, 2, 3]} tickFormatter={(value) => value === 1 ? "LOW" : value === 2 ? "MEDIUM" : value === 3 ? "HIGH" : ""} />
+                    <Tooltip formatter={(value: any) => [value === 1 ? "LOW" : value === 2 ? "MEDIUM" : value === 3 ? "HIGH" : value, "Congestion"]} />
+                    <Legend />
+                    {predictions.map((prediction: any) => (
+                      <Line key={prediction.road_id} type="monotone" dataKey={prediction.road_id} stroke="#2563eb" strokeWidth={2} dot={{ r: 4 }} />
+                    ))}
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            )}
           </div>
           <div className="mt-6">
             <LiveMap vehicles={vehicles} routes={routes} traffic={traffic} incidents={incidents} selectedVehicle={selectedVehicle} onSelectVehicle={setSelectedVehicle} />
