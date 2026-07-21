@@ -4,7 +4,7 @@ import FleetStatus from "../components/dashboard/FleetStatus";
 import TrafficOverview from "../components/dashboard/TrafficOverview";
 import PredictionWidget from "../components/dashboard/PredictionWidget";
 import AlertPanel from "../components/dashboard/AlertPanel";
-import MapPlaceholder from "../components/dashboard/MapPlaceholder";
+import LiveMap from "../components/dashboard/LiveMap";
 import { getVehicles } from "../services/vehicleService";
 import { getTraffic } from "../services/trafficService";
 import { getIncidents } from "../services/incidentService";
@@ -25,7 +25,15 @@ export default function Dashboard() {
       console.log("WebSocket:", lastMessage);
       try {
         const data = JSON.parse(lastMessage);
-        if (data.event === "vehicle_updated") {
+        if (data.event === "vehicle_location") {
+          setVehicles((prev) =>
+            prev.map((v) =>
+              v.vehicle_id === data.vehicle_id
+                ? { ...v, latitude: data.latitude, longitude: data.longitude }
+                : v
+            )
+          );
+        } else if (data.event === "vehicle_updated") {
           loadDashboardData();
         }
       } catch {
@@ -124,7 +132,7 @@ export default function Dashboard() {
             <AlertPanel totalAlerts={dashboardMetrics.totalAlerts} criticalAlerts={dashboardMetrics.criticalAlerts} warningAlerts={dashboardMetrics.warningAlerts} />
           </div>
           <div className="mt-6">
-            <MapPlaceholder title="Live Traffic Map" />
+            <LiveMap vehicles={vehicles} routes={routes} traffic={traffic} incidents={incidents} />
           </div>
         </>
       )}
