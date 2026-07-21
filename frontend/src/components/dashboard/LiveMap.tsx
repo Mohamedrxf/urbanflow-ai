@@ -9,6 +9,10 @@ interface LiveMapProps {
     latitude: number;
     longitude: number;
     status: string;
+    driver_name?: string;
+    vehicle_type?: string;
+    speed?: number;
+    created_at?: string;
   }>;
   routes: Array<{
     route_id: string;
@@ -32,11 +36,13 @@ interface LiveMapProps {
     latitude?: number;
     longitude?: number;
   }>;
+  selectedVehicle: any | null;
+  onSelectVehicle: (vehicle: any) => void;
 }
 
 const defaultCenter: [number, number] = [40.7128, -74.006];
 
-function VehicleMarker({ vehicle }: { vehicle: LiveMapProps["vehicles"][number] }) {
+function VehicleMarker({ vehicle, onClick }: { vehicle: LiveMapProps["vehicles"][number]; onClick?: () => void }) {
   const markerRef = useRef<L.Marker>(null);
 
   useEffect(() => {
@@ -58,7 +64,7 @@ function VehicleMarker({ vehicle }: { vehicle: LiveMapProps["vehicles"][number] 
   }
 
   return (
-    <Marker position={[vehicle.latitude, vehicle.longitude]} ref={markerRef}>
+    <Marker position={[vehicle.latitude, vehicle.longitude]} ref={markerRef} eventHandlers={{ click: onClick }}>
       <Popup>
         <div className="text-sm">
           <p className="font-medium">Vehicle ID: {vehicle.vehicle_id}</p>
@@ -92,7 +98,7 @@ function IncidentMarker({ incident }: { incident: LiveMapProps["incidents"][numb
   );
 }
 
-export default function LiveMap({ vehicles, routes, traffic, incidents }: LiveMapProps) {
+export default function LiveMap({ vehicles, routes, traffic, incidents, selectedVehicle, onSelectVehicle }: LiveMapProps) {
   const markers = vehicles.filter(
     (v) => typeof v.latitude === "number" && typeof v.longitude === "number"
   );
@@ -152,10 +158,55 @@ export default function LiveMap({ vehicles, routes, traffic, incidents }: LiveMa
           ))}
           <style>{`.leaflet-marker-icon { transition: transform 0.5s ease; }`}</style>
           {markers.map((vehicle) => (
-            <VehicleMarker key={vehicle.vehicle_id} vehicle={vehicle} />
+            <VehicleMarker key={vehicle.vehicle_id} vehicle={vehicle} onClick={() => onSelectVehicle(vehicle)} />
           ))}
         </MapContainer>
       </div>
+      {selectedVehicle ? (
+        <div className="mt-4 rounded-lg border border-gray-200 p-4 bg-white">
+          <h4 className="text-sm font-medium text-gray-900 mb-2">Vehicle Details</h4>
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <div>
+              <p className="text-gray-500">Vehicle ID</p>
+              <p className="font-medium">{selectedVehicle.vehicle_id}</p>
+            </div>
+            <div>
+              <p className="text-gray-500">Driver Name</p>
+              <p className="font-medium">{selectedVehicle.driver_name || "N/A"}</p>
+            </div>
+            <div>
+              <p className="text-gray-500">Vehicle Type</p>
+              <p className="font-medium">{selectedVehicle.vehicle_type || "N/A"}</p>
+            </div>
+            <div>
+              <p className="text-gray-500">Status</p>
+              <p className="font-medium">{selectedVehicle.status}</p>
+            </div>
+            <div>
+              <p className="text-gray-500">Speed</p>
+              <p className="font-medium">{typeof selectedVehicle.speed === "number" ? `${selectedVehicle.speed} km/h` : "N/A"}</p>
+            </div>
+            <div>
+              <p className="text-gray-500">Latitude</p>
+              <p className="font-medium">{typeof selectedVehicle.latitude === "number" ? selectedVehicle.latitude : "N/A"}</p>
+            </div>
+            <div>
+              <p className="text-gray-500">Longitude</p>
+              <p className="font-medium">{typeof selectedVehicle.longitude === "number" ? selectedVehicle.longitude : "N/A"}</p>
+            </div>
+            <div>
+              <p className="text-gray-500">Current Route</p>
+              <p className="font-medium">N/A</p>
+            </div>
+            <div>
+              <p className="text-gray-500">Last Updated</p>
+              <p className="font-medium">{selectedVehicle.created_at || "N/A"}</p>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <p className="mt-4 text-sm text-gray-500">Select a vehicle to view details.</p>
+      )}
     </div>
   );
 }
