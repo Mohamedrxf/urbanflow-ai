@@ -77,6 +77,7 @@ export default function Dashboard() {
    const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedVehicle, setSelectedVehicle] = useState<any | null>(null);
+  const [routeRecommendations, setRouteRecommendations] = useState<any | null>(null);
 
   useEffect(() => {
     if (lastMessage) {
@@ -126,6 +127,9 @@ export default function Dashboard() {
 
       const predictionsResponse = await getPredictions();
       setPredictions(predictionsResponse.data);
+
+      const recommendationsResponse = await api.get("/route-recommendations");
+      setRouteRecommendations(recommendationsResponse.data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load dashboard data");
     } finally {
@@ -306,6 +310,37 @@ export default function Dashboard() {
               </div>
             );
           })()}
+          <div className="mt-6">
+            <h3 className="text-sm font-medium text-gray-600 mb-3">🧭 Route Recommendations</h3>
+            {!routeRecommendations ? (
+              <p className="text-sm text-gray-500">No route recommendations available.</p>
+            ) : (
+              <div className="rounded-lg border border-gray-200 p-4 bg-white">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 text-sm">
+                  <div>
+                    <p className="text-gray-500">Best Route</p>
+                    <p className="font-medium">{routeRecommendations.best_route?.route_id || "N/A"}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Estimated Time</p>
+                    <p className="font-medium">{routeRecommendations.estimated_time != null ? `${routeRecommendations.estimated_time} min` : "N/A"}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Optimized Time</p>
+                    <p className="font-medium">{routeRecommendations.optimized_time != null ? `${routeRecommendations.optimized_time} min` : "N/A"}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Time Saved</p>
+                    <p className="font-medium">{routeRecommendations.time_saved != null ? `${routeRecommendations.time_saved} min` : "N/A"}</p>
+                  </div>
+                </div>
+                <div className="mt-3 text-sm">
+                  <p className="text-gray-500">Recommendation</p>
+                  <p className="font-medium">{routeRecommendations.recommendation || "N/A"}</p>
+                </div>
+              </div>
+            )}
+          </div>
           <div className="mt-6">
             <h3 className="text-sm font-medium text-gray-600 mb-3">Fleet Analytics</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
