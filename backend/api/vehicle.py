@@ -2,10 +2,14 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from backend.config.database import get_db
 from backend.repositories.vehicle_repository import VehicleRepository
+from backend.repositories.traffic_repository import TrafficRepository
+from backend.repositories.road_incident_repository import RoadIncidentRepository
 from backend.schemas.vehicle import VehicleCreate, VehicleResponse, VehicleUpdate
-from backend.ai.route_service import broadcast_route_recommendations
+from backend.ai.route_service import get_route_recommendations
 from backend.api.websocket import manager
 from backend.models.vehicle import Vehicle
+from backend.repositories.route_repository import RouteRepository
+from backend.ai.prediction_service import get_predictions
 from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/vehicles", tags=["Vehicles"])
@@ -40,7 +44,13 @@ async def create_vehicle(vehicle: VehicleCreate, db=Depends(get_db)):
     })
     await manager.broadcast(message)
     try:
-        await broadcast_route_recommendations(db=db)
+        vehicles = VehicleRepository(db).get_all()
+        traffic = TrafficRepository(db).get_all()
+        incidents = RoadIncidentRepository(db).get_all()
+        predictions = get_predictions(db=db, input_data={})
+        routes = RouteRepository(db).get_all()
+        _, payload = get_route_recommendations(vehicles, routes, traffic, predictions, incidents)
+        await manager.broadcast_route_recommendation(payload)
     except Exception:
         pass
     return created
@@ -66,7 +76,13 @@ async def update_vehicle(vehicle_id: str, vehicle: VehicleUpdate, db: Session = 
     })
     await manager.broadcast(message)
     try:
-        await broadcast_route_recommendations(db=db)
+        vehicles = VehicleRepository(db).get_all()
+        traffic = TrafficRepository(db).get_all()
+        incidents = RoadIncidentRepository(db).get_all()
+        predictions = get_predictions(db=db, input_data={})
+        routes = RouteRepository(db).get_all()
+        _, payload = get_route_recommendations(vehicles, routes, traffic, predictions, incidents)
+        await manager.broadcast_route_recommendation(payload)
     except Exception:
         pass
     return db_vehicle
@@ -89,7 +105,13 @@ async def delete_vehicle(vehicle_id: str, db: Session = Depends(get_db)):
     })
     await manager.broadcast(message)
     try:
-        await broadcast_route_recommendations(db=db)
+        vehicles = VehicleRepository(db).get_all()
+        traffic = TrafficRepository(db).get_all()
+        incidents = RoadIncidentRepository(db).get_all()
+        predictions = get_predictions(db=db, input_data={})
+        routes = RouteRepository(db).get_all()
+        _, payload = get_route_recommendations(vehicles, routes, traffic, predictions, incidents)
+        await manager.broadcast_route_recommendation(payload)
     except Exception:
         pass
     return {"detail": "Vehicle deleted"}
