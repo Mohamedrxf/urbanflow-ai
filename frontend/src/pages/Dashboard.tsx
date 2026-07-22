@@ -11,7 +11,7 @@ import { getIncidents } from "../services/incidentService";
 import { getRoutes } from "../services/routeService";
 import { useWebSocket } from "../hooks/useWebSocket";
 import api from "../services/api";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from "recharts";
 
   const getPredictions = () => api.get("/predictions");
 
@@ -225,9 +225,11 @@ export default function Dashboard() {
 
   return (
     <div>
-      <div className="flex items-center gap-2 mb-6">
+      <div className="flex items-center gap-4 mb-6">
         <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
-        <span className="text-sm">{isConnected ? "🟢 Live" : "🔴 Offline"}</span>
+        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${isConnected ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+          {isConnected ? '🟢 Live' : '🔴 Offline'}
+        </span>
       </div>
       {error && <p className="text-red-600">{error}</p>}
       {!error && loading && <p className="text-gray-600">Loading dashboard data...</p>}
@@ -256,15 +258,17 @@ export default function Dashboard() {
             <AlertPanel totalAlerts={dashboardMetrics.totalAlerts} criticalAlerts={dashboardMetrics.criticalAlerts} warningAlerts={dashboardMetrics.warningAlerts} />
           </div>
           <div className="mt-6">
-            <h3 className="text-sm font-medium text-gray-600 mb-3">🤖 AI Traffic Predictions</h3>
+            <h3 className="text-base font-semibold text-gray-900 mb-4">🤖 AI Traffic Predictions</h3>
             {predictions.length === 0 ? (
-              <p className="text-sm text-gray-500">No AI predictions available.</p>
+              <div className="rounded-xl shadow-sm bg-white p-6 text-center">
+                <p className="text-sm text-gray-500">No AI predictions available.</p>
+              </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
                 {predictions.map((prediction: any) => (
-                  <div key={prediction.road_id} className="rounded-lg border border-gray-200 p-4 bg-white">
+                  <div key={prediction.road_id} className="rounded-xl shadow p-6 bg-white">
                     <h4 className="text-sm font-medium text-gray-900 mb-2">{prediction.road_id}</h4>
-                    <div className="flex flex-col gap-2 text-sm">
+                    <div className="flex flex-col gap-4 text-sm">
                       <div className="flex justify-between">
                         <span className="text-gray-500">Current Congestion</span>
                         <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getCongestionBadgeClasses(prediction.current_congestion)}`}>
@@ -290,7 +294,7 @@ export default function Dashboard() {
                         <span className="text-gray-500">Prediction Window</span>
                         <span className="font-medium">{prediction.prediction_minutes} min</span>
                       </div>
-                      <div className="rounded-lg border border-gray-200 p-3 bg-gray-50">
+                      <div className="rounded-xl shadow p-4 bg-gray-50">
                         <p className="text-xs font-medium text-gray-700 mb-1">🤖 Recommendation</p>
                         <ul className="list-disc list-inside text-xs text-gray-600 space-y-0.5">
                           {getRecommendations(prediction.predicted_congestion).map((item, idx) => (
@@ -305,11 +309,13 @@ export default function Dashboard() {
             )}
           </div>
           <div className="mt-6">
-            <h3 className="text-sm font-medium text-gray-600 mb-3">📈 AI Prediction Trends</h3>
+            <h3 className="text-base font-semibold text-gray-900 mb-4">📈 AI Prediction Trends</h3>
             {predictions.length === 0 ? (
-              <p className="text-sm text-gray-500">No prediction history available.</p>
+              <div className="rounded-xl shadow-sm bg-white p-6 text-center">
+                <p className="text-sm text-gray-500">No prediction history available.</p>
+              </div>
             ) : (
-              <div className="rounded-lg border border-gray-200 p-4 bg-white">
+              <div className="rounded-xl shadow p-6 bg-white">
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={generatePredictionHistory(predictions)}>
                     <CartesianGrid strokeDasharray="3 3" />
@@ -336,9 +342,9 @@ export default function Dashboard() {
             const timeSaved = delay;
 
             return (
-              <div className="mt-6 rounded-lg border border-gray-200 p-4 bg-white">
-                <h3 className="text-sm font-medium text-gray-600 mb-3">ETA Prediction</h3>
-                <div className="grid grid-cols-2 gap-2 text-sm">
+              <div className="mt-6 rounded-xl shadow p-6 bg-white">
+                <h3 className="text-base font-semibold text-gray-900 mb-4">ETA Prediction</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   <div>
                     <p className="text-gray-500">Current ETA</p>
                     <p className="font-medium">{currentETA !== null ? `${currentETA} min` : "N/A"}</p>
@@ -360,11 +366,13 @@ export default function Dashboard() {
             );
           })()}
           <div className="mt-6">
-            <h3 className="text-sm font-medium text-gray-600 mb-3">🧭 Route Recommendations</h3>
+            <h3 className="text-base font-semibold text-gray-900 mb-4">🧭 Route Recommendations</h3>
             {!routeRecommendations ? (
-              <p className="text-sm text-gray-500">No route recommendations available.</p>
+              <div className="rounded-xl shadow-sm bg-white p-6 text-center">
+                <p className="text-sm text-gray-500">No route recommendations available.</p>
+              </div>
             ) : (
-              <div className="rounded-lg border border-gray-200 p-4 bg-white">
+              <div className="rounded-xl shadow p-6 bg-white">
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 text-sm">
                   <div>
                     <p className="text-gray-500">Best Route</p>
@@ -391,66 +399,280 @@ export default function Dashboard() {
             )}
           </div>
           <div className="mt-6">
-            <h3 className="text-sm font-medium text-gray-600 mb-3">Fleet Analytics</h3>
+            <h3 className="text-base font-semibold text-gray-900 mb-4">🛣️ Route Efficiency Analytics</h3>
+            {(() => {
+              const totalRoutes = routes.length;
+              const optimizedRoutes = routes.filter((r: any) => (r.optimized_time_min || 0) < (r.estimated_time_min || 0)).length;
+              const avgETA = totalRoutes
+                ? routes.reduce((sum: number, r: any) => sum + (r.estimated_time_min || 0), 0) / totalRoutes
+                : 0;
+              const avgOptimizedETA = totalRoutes
+                ? routes.reduce((sum: number, r: any) => sum + (r.optimized_time_min || 0), 0) / totalRoutes
+                : 0;
+              const totalTimeSaved = routes.reduce((sum: number, r: any) => sum + ((r.estimated_time_min || 0) - (r.optimized_time_min || 0)), 0);
+              const optimizationRate = totalRoutes ? (optimizedRoutes / totalRoutes) * 100 : 0;
+
+              if (totalRoutes === 0) {
+                return <div className="rounded-xl shadow-sm bg-white p-6 text-center"><p className="text-sm text-gray-500">No route analytics available.</p></div>;
+              }
+
+              const chartData = routes.map((r: any) => ({
+                name: r.route_id || `Route ${r.id || ""}`,
+                timeSaved: Math.max(0, (r.estimated_time_min || 0) - (r.optimized_time_min || 0)),
+              }));
+
+              return (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-4 mb-4">
+                    <KpiCard title="Total Routes" value={String(totalRoutes)} subtitle="Analyzed routes" />
+                    <KpiCard title="Optimized Routes" value={String(optimizedRoutes)} subtitle="Faster than ETA" />
+                    <KpiCard title="Average ETA" value={`${avgETA.toFixed(1)} min`} subtitle="Estimated" />
+                    <KpiCard title="Average Optimized ETA" value={`${avgOptimizedETA.toFixed(1)} min`} subtitle="Optimized" />
+                    <KpiCard title="Total Time Saved" value={`${totalTimeSaved.toFixed(1)} min`} subtitle="Cumulative" />
+                    <KpiCard title="Optimization Rate" value={`${optimizationRate.toFixed(1)}%`} subtitle="Routes optimized" />
+                  </div>
+                  <div className="rounded-xl shadow p-6 bg-white">
+                    <h4 className="text-sm font-medium text-gray-900 mb-3">Time Saved Per Route</h4>
+                    <ResponsiveContainer width="100%" height={250}>
+                      <BarChart data={chartData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip formatter={(value: any) => [`${value} min`, "Time Saved"]} />
+                        <Legend />
+                        <Bar dataKey="timeSaved" fill="#2563eb" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+          <div className="mt-6">
+            <h3 className="text-base font-semibold text-gray-900 mb-4">🚦 Congestion Analytics</h3>
+             {traffic.length === 0 ? (
+               <div className="rounded-xl shadow-sm bg-white p-6 text-center">
+                 <p className="text-sm text-gray-500">No congestion analytics available.</p>
+               </div>
+             ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-4 mb-4">
+                  <KpiCard title="Total Traffic Segments" value={String(traffic.length)} subtitle="Monitored roads" />
+                  <KpiCard title="High Congestion Segments" value={String(traffic.filter((t: any) => (t.congestion_level || "").toUpperCase() === "HIGH").length)} subtitle="Severe traffic" />
+                  <KpiCard title="Medium Congestion Segments" value={String(traffic.filter((t: any) => (t.congestion_level || "").toUpperCase() === "MEDIUM").length)} subtitle="Moderate traffic" />
+                  <KpiCard title="Low Congestion Segments" value={String(traffic.filter((t: any) => (t.congestion_level || "").toUpperCase() === "LOW").length)} subtitle="Smooth traffic" />
+                  <KpiCard title="Total Incidents" value={String(incidents.length)} subtitle="Reported incidents" />
+                  <KpiCard title="High Severity Incidents" value={String(incidents.filter((i: any) => (i.severity || "").toUpperCase() === "HIGH").length)} subtitle="Critical incidents" />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="rounded-xl shadow p-6 bg-white">
+                    <h4 className="text-sm font-medium text-gray-900 mb-3">Traffic Congestion Distribution</h4>
+                    <ResponsiveContainer width="100%" height={250}>
+                      <PieChart>
+                        <Pie
+                          data={[
+                            { name: "HIGH", value: traffic.filter((t: any) => (t.congestion_level || "").toUpperCase() === "HIGH").length },
+                            { name: "MEDIUM", value: traffic.filter((t: any) => (t.congestion_level || "").toUpperCase() === "MEDIUM").length },
+                            { name: "LOW", value: traffic.filter((t: any) => (t.congestion_level || "").toUpperCase() === "LOW").length },
+                          ]}
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={70}
+                          dataKey="value"
+                          label={({ name, value }) => value ? `${name}: ${value}` : null}
+                        >
+                          <Cell fill="#ef4444" />
+                          <Cell fill="#f59e0b" />
+                          <Cell fill="#10b981" />
+                        </Pie>
+                        <Tooltip formatter={(value: any) => [`${value}`, "Segments"]} />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="rounded-xl shadow p-6 bg-white">
+                    <h4 className="text-sm font-medium text-gray-900 mb-3">Incident Severity Distribution</h4>
+                    <ResponsiveContainer width="100%" height={250}>
+                      <PieChart>
+                        <Pie
+                          data={[
+                            { name: "HIGH", value: incidents.filter((i: any) => (i.severity || "").toUpperCase() === "HIGH").length },
+                            { name: "MEDIUM", value: incidents.filter((i: any) => (i.severity || "").toUpperCase() === "MEDIUM").length },
+                            { name: "LOW", value: incidents.filter((i: any) => (i.severity || "").toUpperCase() === "LOW").length },
+                          ]}
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={70}
+                          dataKey="value"
+                          label={({ name, value }) => value ? `${name}: ${value}` : null}
+                        >
+                          <Cell fill="#ef4444" />
+                          <Cell fill="#f59e0b" />
+                          <Cell fill="#10b981" />
+                        </Pie>
+                        <Tooltip formatter={(value: any) => [`${value}`, "Incidents"]} />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+          <div className="mt-6 rounded-xl shadow p-6 bg-white">
+            <h2 className="text-xl font-semibold text-gray-900">UrbanFlow AI Command Center</h2>
+            <p className="text-sm text-gray-500 mt-1">Real-time fleet intelligence and smart traffic management dashboard</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-4 mt-4">
+              <KpiCard title="Total Vehicles" value={String(totalVehicles)} subtitle="Registered fleet" />
+              <KpiCard title="Active Vehicles" value={String(dashboardMetrics.activeVehicles)} subtitle={`of ${totalVehicles} total`} />
+              <KpiCard title="Emergency Vehicles" value={String(emergencyPriority ? emergencyPriority.emergency_vehicle_count ?? 0 : 0)} subtitle="Priority active" />
+              <KpiCard title="Fleet Efficiency" value={String(fleetOptimization?.fleet_efficiency || "N/A")} subtitle={fleetOptimization?.fleet_efficiency ? "Performance level" : "No data"} />
+              <KpiCard title="Current Traffic Status" value={String(dashboardMetrics.congestionLevel)} subtitle="City traffic" />
+            </div>
+          </div>
+          <div className="mt-6">
+            <h3 className="text-base font-semibold text-gray-900 mb-4">📊 Fleet Analytics</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-              <div className="rounded-lg border border-gray-200 p-4 bg-white">
-                <h4 className="text-sm font-medium text-gray-900 mb-2">Fleet Status</h4>
-                <div className="flex flex-col gap-2 text-sm">
-                  <div className="flex justify-between">
-                    <span>Active</span>
-                    <span className="font-medium">{dashboardMetrics.activeVehicles}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Idle</span>
-                    <span className="font-medium">{dashboardMetrics.idleVehicles}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Maintenance</span>
-                    <span className="font-medium">{dashboardMetrics.maintenanceVehicles}</span>
-                  </div>
-                </div>
+              <KpiCard
+                title="Fleet Score"
+                value={fleetOptimization?.fleet_score != null ? String(fleetOptimization.fleet_score) : "N/A"}
+                subtitle={fleetOptimization?.fleet_score != null ? "out of 100" : "No data"}
+              />
+              <div className="rounded-xl shadow p-6 bg-white">
+                <h3 className="text-sm font-medium text-gray-600">Fleet Efficiency</h3>
+                <p className="text-2xl font-semibold text-gray-900 mt-2">
+                  {fleetOptimization?.fleet_efficiency || "N/A"}
+                </p>
+                <p className="text-sm text-gray-500 mt-1">Performance level</p>
+                {fleetOptimization?.fleet_efficiency && (
+                  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium mt-2 ${getFleetEfficiencyBadgeClasses(fleetOptimization.fleet_efficiency)}`}>
+                    {fleetOptimization.fleet_efficiency}
+                  </span>
+                )}
               </div>
-              <div className="rounded-lg border border-gray-200 p-4 bg-white">
-                <h4 className="text-sm font-medium text-gray-900 mb-2">Vehicle Types</h4>
-                <div className="flex flex-col gap-2 text-sm">
-                  {["Truck", "Ambulance", "Van", "Bike"].map((type) => (
-                    <div className="flex justify-between" key={type}>
-                      <span>{type}</span>
-                      <span className="font-medium">{vehicles.filter((v: any) => v.vehicle_type === type).length}</span>
-                    </div>
-                  ))}
-                </div>
+              <KpiCard
+                title="Active Vehicles"
+                value={String(dashboardMetrics.activeVehicles)}
+                subtitle={`of ${totalVehicles} total`}
+              />
+              <KpiCard
+                title="Emergency Vehicles"
+                value={emergencyPriority ? String(emergencyPriority.emergency_vehicle_count ?? 0) : "0"}
+                subtitle="Priority active"
+              />
+              <KpiCard
+                title="Average Route Score"
+                value={fleetOptimization?.average_route_score != null ? String(fleetOptimization.average_route_score) : "N/A"}
+                subtitle="Fleet performance"
+              />
+              <KpiCard
+                title="Average Time Saved"
+                value={fleetOptimization?.average_time_saved != null ? `${fleetOptimization.average_time_saved} min` : "N/A"}
+                subtitle="Optimized routes"
+              />
+            </div>
+          </div>
+          <div className="mt-6">
+            <h3 className="text-base font-semibold text-gray-900 mb-4">📈 Fleet Performance</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="rounded-xl shadow p-6 bg-white">
+                <h4 className="text-sm font-medium text-gray-900 mb-3">Fleet Score Trend</h4>
+                <ResponsiveContainer width="100%" height={250}>
+                  <LineChart data={(() => {
+                    const score = fleetOptimization?.fleet_score;
+                    const now = new Date();
+                    return Array.from({ length: 6 }, (_, i) => ({
+                      time: new Date(now.getTime() - (5 - i) * 15 * 60 * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+                      score: score != null ? Math.max(0, Math.min(100, score - 2 + i)) : 0,
+                    }));
+                  })()}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="time" />
+                    <YAxis domain={[0, 100]} />
+                    <Tooltip formatter={(value: any) => [`${value} / 100`, "Fleet Score"]} />
+                    <Legend />
+                    <Line type="monotone" dataKey="score" stroke="#2563eb" strokeWidth={2} dot={{ r: 4 }} />
+                  </LineChart>
+                </ResponsiveContainer>
               </div>
-              <div className="rounded-lg border border-gray-200 p-4 bg-white">
-                <h4 className="text-sm font-medium text-gray-900 mb-2">Traffic Distribution</h4>
-                <div className="flex flex-col gap-2 text-sm">
-                  {["Low", "Medium", "High"].map((level) => (
-                    <div className="flex justify-between" key={level}>
-                      <span>{level}</span>
-                      <span className="font-medium">{traffic.filter((t: any) => t.congestion_level === level).length}</span>
-                    </div>
-                  ))}
-                </div>
+              <div className="rounded-xl shadow p-6 bg-white">
+                <h4 className="text-sm font-medium text-gray-900 mb-3">Active Vehicles</h4>
+                <ResponsiveContainer width="100%" height={250}>
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: "Active", value: dashboardMetrics.activeVehicles },
+                        { name: "Inactive", value: dashboardMetrics.idleVehicles + dashboardMetrics.maintenanceVehicles },
+                        { name: "Maintenance", value: dashboardMetrics.maintenanceVehicles },
+                      ]}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={70}
+                      dataKey="value"
+                      label={({ name, value }) => value ? `${name}: ${value}` : null}
+                    >
+                      <Cell fill="#10b981" />
+                      <Cell fill="#f59e0b" />
+                      <Cell fill="#ef4444" />
+                    </Pie>
+                    <Tooltip formatter={(value: any) => [`${value}`, "Vehicles"]} />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
-              <div className="rounded-lg border border-gray-200 p-4 bg-white">
-                <h4 className="text-sm font-medium text-gray-900 mb-2">Incident Distribution</h4>
-                <div className="flex flex-col gap-2 text-sm">
-                  {["Low", "Medium", "High"].map((level) => (
-                    <div className="flex justify-between" key={level}>
-                      <span>{level}</span>
-                      <span className="font-medium">{incidents.filter((i: any) => i.severity === level).length}</span>
-                    </div>
-                  ))}
-                </div>
+              <div className="rounded-xl shadow p-6 bg-white">
+                <h4 className="text-sm font-medium text-gray-900 mb-3">Emergency Vehicles</h4>
+                <ResponsiveContainer width="100%" height={250}>
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: "Emergency Vehicles", value: emergencyPriority ? emergencyPriority.emergency_vehicle_count : 0 },
+                        { name: "Normal Vehicles", value: Math.max(0, totalVehicles - (emergencyPriority ? emergencyPriority.emergency_vehicle_count : 0)) },
+                      ]}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={70}
+                      dataKey="value"
+                      label={({ name, value }) => value ? `${name}: ${value}` : null}
+                    >
+                      <Cell fill="#ef4444" />
+                      <Cell fill="#2563eb" />
+                    </Pie>
+                    <Tooltip formatter={(value: any) => [`${value}`, "Vehicles"]} />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="rounded-xl shadow p-6 bg-white">
+                <h4 className="text-sm font-medium text-gray-900 mb-3">Average Route Score</h4>
+                <ResponsiveContainer width="100%" height={250}>
+                  <LineChart data={(() => {
+                    const score = fleetOptimization?.average_route_score;
+                    const now = new Date();
+                    return Array.from({ length: 6 }, (_, i) => ({
+                      time: new Date(now.getTime() - (5 - i) * 15 * 60 * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+                      score: score != null ? Math.max(0, score - 1 + i * 0.5) : 0,
+                    }));
+                  })()}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="time" />
+                    <YAxis domain={[0, 100]} />
+                    <Tooltip formatter={(value: any) => [`${value}`, "Avg Route Score"]} />
+                    <Legend />
+                    <Line type="monotone" dataKey="score" stroke="#16a34a" strokeWidth={2} dot={{ r: 4 }} />
+                  </LineChart>
+                </ResponsiveContainer>
               </div>
             </div>
           </div>
           <div className="mt-6">
-            <h3 className="text-sm font-medium text-gray-600 mb-3">🚛 Fleet Optimization</h3>
-            {!fleetOptimization ? (
-              <p className="text-sm text-gray-500">No fleet optimization data available.</p>
-            ) : (
-              <div className="rounded-lg border border-gray-200 p-4 bg-white">
+            <h3 className="text-base font-semibold text-gray-900 mb-4">🚛 Fleet Optimization</h3>
+             {!fleetOptimization ? (
+               <div className="rounded-xl shadow-sm bg-white p-6 text-center">
+                 <p className="text-sm text-gray-500">No fleet optimization data available.</p>
+               </div>
+             ) : (
+              <div className="rounded-xl shadow p-6 bg-white">
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 text-sm">
                   <div>
                     <p className="text-gray-500">Fleet Score</p>
@@ -486,15 +708,17 @@ export default function Dashboard() {
             )}
           </div>
           <div className="mt-6">
-            <h3 className="text-sm font-medium text-gray-600 mb-3">🚑 Emergency Vehicle Priority</h3>
-            {!emergencyPriority || emergencyPriority.emergency_vehicle_count === 0 ? (
-              <p className="text-sm text-gray-500">No emergency vehicles detected.</p>
-            ) : (
-              <div className="rounded-lg border border-gray-200 p-4 bg-white">
+            <h3 className="text-base font-semibold text-gray-900 mb-4">🚑 Emergency Vehicle Priority</h3>
+             {!emergencyPriority || emergencyPriority.emergency_vehicle_count === 0 ? (
+               <div className="rounded-xl shadow-sm bg-white p-6 text-center">
+                 <p className="text-sm text-gray-500">No emergency vehicles detected.</p>
+               </div>
+             ) : (
+              <div className="rounded-xl shadow p-6 bg-white">
                 <div className="flex flex-col gap-4 text-sm">
                   {emergencyPriority.vehicles.map((item: any, idx: number) => (
-                    <div key={item.vehicle_id || idx} className="rounded-lg border border-gray-100 p-3">
-                      <div className="flex flex-col gap-2">
+                    <div key={item.vehicle_id || idx} className="rounded-xl shadow p-4">
+                      <div className="flex flex-col gap-4">
                         <div className="flex justify-between items-center">
                           <span className="font-medium">{item.vehicle_id}</span>
                           <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getEmergencyPriorityBadgeClasses(item.priority_level)}`}>
@@ -522,8 +746,8 @@ export default function Dashboard() {
             )}
           </div>
           <div className="mt-6">
-            <h3 className="text-sm font-medium text-gray-600 mb-3">Notification Center</h3>
-            <div className="rounded-lg border border-gray-200 bg-white divide-y divide-gray-100">
+            <h3 className="text-base font-semibold text-gray-900 mb-4">Notification Center</h3>
+            <div className="rounded-xl shadow bg-white divide-y divide-gray-100">
               {(() => {
                 const generatedNotifications = [
                   ...traffic.filter((t: any) => (t.congestion_level || "").toLowerCase() === "high").map((t: any, idx: number) => ({
@@ -564,10 +788,12 @@ export default function Dashboard() {
                 };
 
                 return generatedNotifications.length === 0 ? (
-                  <p className="p-4 text-sm text-gray-500">No notifications</p>
+                  <div className="p-6 text-center">
+                    <p className="text-sm text-gray-500">No notifications</p>
+                  </div>
                 ) : (
                   generatedNotifications.map((n, idx) => (
-                    <div key={n.id || idx} className="flex items-start gap-3 p-3">
+                    <div key={n.id || idx} className="flex items-start gap-4 p-4">
                       <span className="text-lg leading-none mt-0.5">{n.icon}</span>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-gray-900">{n.message}</p>
