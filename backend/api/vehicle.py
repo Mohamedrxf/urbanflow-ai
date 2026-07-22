@@ -11,6 +11,7 @@ from backend.api.websocket import manager
 from backend.models.vehicle import Vehicle
 from backend.repositories.route_repository import RouteRepository
 from backend.ai.prediction_service import get_predictions
+from backend.ai.emergency_priority import EmergencyPriorityEngine
 from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/vehicles", tags=["Vehicles"])
@@ -52,6 +53,15 @@ async def create_vehicle(vehicle: VehicleCreate, db=Depends(get_db)):
         await manager.broadcast_route_recommendation(payload)
         _, _, fleet_payload = get_fleet_optimization(vehicles, routes, traffic, predictions)
         await manager.broadcast(json.dumps(fleet_payload))
+        emergency_results = []
+        for vehicle in vehicles:
+            emergency_results.append(EmergencyPriorityEngine().calculate_priority(vehicle))
+        emergency_payload = {
+            "event": "emergency_priority_updated",
+            "emergency_vehicle_count": sum(1 for r in emergency_results if r.get("is_emergency")),
+            "vehicles": emergency_results,
+        }
+        await manager.broadcast(json.dumps(emergency_payload))
     except Exception:
         pass
     return created
@@ -86,6 +96,15 @@ async def update_vehicle(vehicle_id: str, vehicle: VehicleUpdate, db: Session = 
         await manager.broadcast_route_recommendation(payload)
         _, _, fleet_payload = get_fleet_optimization(vehicles, routes, traffic, predictions)
         await manager.broadcast(json.dumps(fleet_payload))
+        emergency_results = []
+        for vehicle in vehicles:
+            emergency_results.append(EmergencyPriorityEngine().calculate_priority(vehicle))
+        emergency_payload = {
+            "event": "emergency_priority_updated",
+            "emergency_vehicle_count": sum(1 for r in emergency_results if r.get("is_emergency")),
+            "vehicles": emergency_results,
+        }
+        await manager.broadcast(json.dumps(emergency_payload))
     except Exception:
         pass
     return db_vehicle
@@ -117,6 +136,15 @@ async def delete_vehicle(vehicle_id: str, db: Session = Depends(get_db)):
         await manager.broadcast_route_recommendation(payload)
         _, _, fleet_payload = get_fleet_optimization(vehicles, routes, traffic, predictions)
         await manager.broadcast(json.dumps(fleet_payload))
+        emergency_results = []
+        for vehicle in vehicles:
+            emergency_results.append(EmergencyPriorityEngine().calculate_priority(vehicle))
+        emergency_payload = {
+            "event": "emergency_priority_updated",
+            "emergency_vehicle_count": sum(1 for r in emergency_results if r.get("is_emergency")),
+            "vehicles": emergency_results,
+        }
+        await manager.broadcast(json.dumps(emergency_payload))
     except Exception:
         pass
     return {"detail": "Vehicle deleted"}
