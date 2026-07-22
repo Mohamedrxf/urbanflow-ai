@@ -1,7 +1,5 @@
 """Route service for exposing route recommendations."""
 
-from datetime import datetime, timezone
-
 from backend.ai.route_engine import run_route_engine
 from backend.api.websocket import manager
 
@@ -17,9 +15,21 @@ def get_route_recommendations(vehicles, routes, traffic, predictions, incidents)
         incidents: Current incidents.
 
     Returns:
-        dict: Route recommendations from the engine.
+        tuple: (recommendation result, websocket payload)
     """
-    return run_route_engine(vehicles, routes, traffic, predictions, incidents)
+    result = run_route_engine(vehicles, routes, traffic, predictions, incidents)
+    best_route = result.get("best_route")
+    payload = {
+        "event": "route_recommendation_updated",
+        "vehicle_id": best_route.vehicle_id if best_route else None,
+        "best_route": best_route.route_id if best_route else None,
+        "route_score": result.get("route_score"),
+        "estimated_time": result.get("estimated_time"),
+        "optimized_time": result.get("optimized_time"),
+        "time_saved": result.get("time_saved"),
+        "recommendation": result.get("recommendation"),
+    }
+    return result, payload
 
 
 async def broadcast_route_recommendations(db=None):
@@ -48,20 +58,7 @@ async def broadcast_route_recommendations(db=None):
         predictions = get_predictions(db=db, input_data={})
         routes = RouteRepository(db).get_all()
 
-        result = get_route_recommendations(vehicles, routes, traffic, predictions, incidents)
-
-        best_route = result.get("best_route")
-        payload = {
-            "event": "route_recommendation_updated",
-            "vehicle_id": best_route.vehicle_id if best_route else None,
-            "best_route": best_route.route_id if best_route else None,
-            "route_score": result.get("route_score"),
-            "estimated_time": result.get("estimated_time"),
-            "optimized_time": result.get("optimized_time"),
-            "time_saved": result.get("time_saved"),
-            "recommendation": result.get("recommendation"),
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-        }
+        result, payload = get_route_recommendations(vehicles, routes, traffic, predictions, incidents)
         await manager.broadcast_route_recommendation(payload)
     finally:
         if should_close:

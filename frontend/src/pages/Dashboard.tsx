@@ -104,6 +104,16 @@ export default function Dashboard() {
             }
             return [...prev, data];
           });
+        } else if (data.event === "route_recommendation_updated") {
+          setRouteRecommendations({
+            best_route: data.best_route ? { route_id: data.best_route } : null,
+            route_score: data.route_score,
+            estimated_time: data.estimated_time,
+            optimized_time: data.optimized_time,
+            time_saved: data.time_saved,
+            recommendation: data.recommendation,
+            vehicle_id: data.vehicle_id,
+          });
         }
       } catch {
         // ignore non-JSON messages
