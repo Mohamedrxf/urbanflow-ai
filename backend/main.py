@@ -13,6 +13,7 @@ from backend.api.websocket import router as websocket_router
 from backend.api.predictions import router as predictions_router
 from backend.api.route_recommendations import router as route_recommendations_router
 from backend.api.fleet_optimization import router as fleet_optimization_router
+from backend.api.emergency_priority import router as emergency_priority_router
 from backend.config.database import Base, engine
 from backend.services.gps_simulator import GPSSimulator
 
@@ -54,6 +55,7 @@ app.include_router(websocket_router)
 app.include_router(predictions_router)
 app.include_router(route_recommendations_router)
 app.include_router(fleet_optimization_router)
+app.include_router(emergency_priority_router)
 
 
 @app.get("/")

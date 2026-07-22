@@ -52,6 +52,14 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
     return 0;
   };
 
+  const getFleetEfficiencyBadgeClasses = (level: any) => {
+    const value = (level || "").toString().toUpperCase();
+    if (value === "HIGH") return "bg-green-100 text-green-800";
+    if (value === "MEDIUM") return "bg-yellow-100 text-yellow-800";
+    if (value === "LOW") return "bg-red-100 text-red-800";
+    return "bg-gray-100 text-gray-800";
+  };
+
   const generatePredictionHistory = (predictionList: any[]) => {
     const now = new Date();
     const history: any[] = [];
@@ -66,6 +74,15 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
     return history;
   };
 
+  const getEmergencyPriorityBadgeClasses = (level: any) => {
+    const value = (level || "").toString().toUpperCase();
+    if (value === "CRITICAL") return "bg-red-100 text-red-800";
+    if (value === "HIGH") return "bg-orange-100 text-orange-800";
+    if (value === "NORMAL") return "bg-blue-100 text-blue-800";
+    if (value === "LOW") return "bg-gray-100 text-gray-800";
+    return "bg-gray-100 text-gray-800";
+  };
+
 export default function Dashboard() {
   const { isConnected, lastMessage } = useWebSocket();
   const [vehicles, setVehicles] = useState<any[]>([]);
@@ -78,6 +95,8 @@ export default function Dashboard() {
   const [error, setError] = useState<string | null>(null);
   const [selectedVehicle, setSelectedVehicle] = useState<any | null>(null);
   const [routeRecommendations, setRouteRecommendations] = useState<any | null>(null);
+  const [fleetOptimization, setFleetOptimization] = useState<any | null>(null);
+  const [emergencyPriority, setEmergencyPriority] = useState<any | null>(null);
 
   useEffect(() => {
     if (lastMessage) {
@@ -114,6 +133,20 @@ export default function Dashboard() {
             recommendation: data.recommendation,
             vehicle_id: data.vehicle_id,
           });
+        } else if (data.event === "fleet_optimization_updated") {
+          setFleetOptimization({
+            fleet_score: data.fleet_score,
+            fleet_efficiency: data.fleet_efficiency,
+            average_route_score: data.average_route_score,
+            average_time_saved: data.average_time_saved,
+            optimized_vehicle_count: data.optimized_vehicle_count,
+            total_vehicle_count: data.total_vehicle_count,
+          });
+        } else if (data.event === "emergency_priority_updated") {
+          setEmergencyPriority({
+            emergency_vehicle_count: data.emergency_vehicle_count,
+            vehicles: data.vehicles,
+          });
         }
       } catch {
         // ignore non-JSON messages
@@ -140,6 +173,12 @@ export default function Dashboard() {
 
       const recommendationsResponse = await api.get("/route-recommendations");
       setRouteRecommendations(recommendationsResponse.data);
+
+      const fleetResponse = await api.get("/fleet-optimization");
+      setFleetOptimization(fleetResponse.data);
+
+      const emergencyResponse = await api.get("/emergency-priority");
+      setEmergencyPriority(emergencyResponse.data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load dashboard data");
     } finally {
@@ -405,6 +444,82 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
+          </div>
+          <div className="mt-6">
+            <h3 className="text-sm font-medium text-gray-600 mb-3">🚛 Fleet Optimization</h3>
+            {!fleetOptimization ? (
+              <p className="text-sm text-gray-500">No fleet optimization data available.</p>
+            ) : (
+              <div className="rounded-lg border border-gray-200 p-4 bg-white">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 text-sm">
+                  <div>
+                    <p className="text-gray-500">Fleet Score</p>
+                    <p className="font-medium">{fleetOptimization.fleet_score != null ? `${fleetOptimization.fleet_score} / 100` : "N/A"}</p>
+                    <div className="w-full h-2 bg-gray-200 rounded-full mt-2">
+                      <div className="h-2 rounded-full bg-blue-500" style={{ width: `${Math.min(fleetOptimization.fleet_score || 0, 100)}%` }}></div>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Fleet Efficiency</p>
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getFleetEfficiencyBadgeClasses(fleetOptimization.fleet_efficiency)}`}>
+                      {fleetOptimization.fleet_efficiency || "N/A"}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Average Route Score</p>
+                    <p className="font-medium">{fleetOptimization.average_route_score != null ? `${fleetOptimization.average_route_score}` : "N/A"}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Average Time Saved</p>
+                    <p className="font-medium">{fleetOptimization.average_time_saved != null ? `${fleetOptimization.average_time_saved} min` : "N/A"}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Optimized Vehicles</p>
+                    <p className="font-medium">{fleetOptimization.optimized_vehicle_count != null ? `${fleetOptimization.optimized_vehicle_count}` : "N/A"}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Total Vehicles</p>
+                    <p className="font-medium">{fleetOptimization.total_vehicle_count != null ? `${fleetOptimization.total_vehicle_count}` : "N/A"}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="mt-6">
+            <h3 className="text-sm font-medium text-gray-600 mb-3">🚑 Emergency Vehicle Priority</h3>
+            {!emergencyPriority || emergencyPriority.emergency_vehicle_count === 0 ? (
+              <p className="text-sm text-gray-500">No emergency vehicles detected.</p>
+            ) : (
+              <div className="rounded-lg border border-gray-200 p-4 bg-white">
+                <div className="flex flex-col gap-4 text-sm">
+                  {emergencyPriority.vehicles.map((item: any, idx: number) => (
+                    <div key={item.vehicle_id || idx} className="rounded-lg border border-gray-100 p-3">
+                      <div className="flex flex-col gap-2">
+                        <div className="flex justify-between items-center">
+                          <span className="font-medium">{item.vehicle_id}</span>
+                          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getEmergencyPriorityBadgeClasses(item.priority_level)}`}>
+                            {item.priority_level}
+                          </span>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Priority Score</span>
+                            <span className="font-medium">{item.priority_score} / 100</span>
+                          </div>
+                          <div className="w-full h-2 bg-gray-200 rounded-full">
+                            <div className="h-2 rounded-full bg-blue-500" style={{ width: `${Math.min(item.priority_score || 0, 100)}%` }}></div>
+                          </div>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Recommended Action</span>
+                          <p className="font-medium">{item.recommended_action || "N/A"}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
           <div className="mt-6">
             <h3 className="text-sm font-medium text-gray-600 mb-3">Notification Center</h3>
