@@ -1,7 +1,10 @@
 """Route service for exposing route recommendations."""
 
+import json
 from backend.ai.route_engine import run_route_engine
 from backend.api.websocket import manager
+from backend.ai.fleet_optimizer import FleetOptimizer
+from backend.ai.fleet_scorer import FleetScorer
 
 
 def get_route_recommendations(vehicles, routes, traffic, predictions, incidents):
@@ -30,6 +33,32 @@ def get_route_recommendations(vehicles, routes, traffic, predictions, incidents)
         "recommendation": result.get("recommendation"),
     }
     return result, payload
+
+
+def get_fleet_optimization(vehicles, routes, traffic, predictions):
+    """Get fleet optimization results.
+
+    Args:
+        vehicles: Available vehicles.
+        routes: Candidate routes.
+        traffic: Current traffic data.
+        predictions: Prediction data.
+
+    Returns:
+        tuple: (fleet results, fleet score, websocket payload)
+    """
+    fleet_results = FleetOptimizer().optimize_fleet(vehicles, routes, traffic, predictions)
+    fleet_score = FleetScorer().calculate_fleet_score(fleet_results)
+    payload = {
+        "event": "fleet_optimization_updated",
+        "fleet_score": fleet_score.get("fleet_score"),
+        "fleet_efficiency": fleet_score.get("fleet_efficiency"),
+        "average_route_score": fleet_score.get("average_route_score"),
+        "average_time_saved": fleet_score.get("average_time_saved"),
+        "optimized_vehicle_count": fleet_score.get("optimized_vehicle_count"),
+        "total_vehicle_count": fleet_score.get("total_vehicle_count"),
+    }
+    return fleet_results, fleet_score, payload
 
 
 async def broadcast_route_recommendations(db=None):
