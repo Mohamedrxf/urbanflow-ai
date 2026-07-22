@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from backend.config.database import get_db
 from backend.repositories.vehicle_repository import VehicleRepository
 from backend.schemas.vehicle import VehicleCreate, VehicleResponse, VehicleUpdate
+from backend.ai.route_service import broadcast_route_recommendations
 from backend.api.websocket import manager
 from backend.models.vehicle import Vehicle
 from sqlalchemy.orm import Session
@@ -38,6 +39,10 @@ async def create_vehicle(vehicle: VehicleCreate, db=Depends(get_db)):
         "timestamp": datetime.utcnow().isoformat(),
     })
     await manager.broadcast(message)
+    try:
+        await broadcast_route_recommendations(db=db)
+    except Exception:
+        pass
     return created
 
 
@@ -60,6 +65,10 @@ async def update_vehicle(vehicle_id: str, vehicle: VehicleUpdate, db: Session = 
         "timestamp": datetime.utcnow().isoformat(),
     })
     await manager.broadcast(message)
+    try:
+        await broadcast_route_recommendations(db=db)
+    except Exception:
+        pass
     return db_vehicle
 
 
@@ -79,4 +88,8 @@ async def delete_vehicle(vehicle_id: str, db: Session = Depends(get_db)):
         "timestamp": datetime.utcnow().isoformat(),
     })
     await manager.broadcast(message)
+    try:
+        await broadcast_route_recommendations(db=db)
+    except Exception:
+        pass
     return {"detail": "Vehicle deleted"}
