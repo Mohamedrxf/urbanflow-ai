@@ -10,7 +10,7 @@ class VehicleBase(BaseModel):
     longitude: float
     speed: float
     status: str
-    created_at: datetime
+    created_at: datetime | None = None
 
 
 class VehicleCreate(VehicleBase):

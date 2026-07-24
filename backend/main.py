@@ -1,7 +1,8 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
 
 from backend.api.health import router as health_router
 from backend.api.vehicle import router as vehicle_router
@@ -10,11 +11,11 @@ from backend.api.road_incident import router as road_incident_router
 from backend.api.route import router as route_router
 from backend.api.auth import router as auth_router
 from backend.api.websocket import router as websocket_router
-from backend.api.predictions import router as predictions_router
-from backend.api.route_recommendations import router as route_recommendations_router
-from backend.api.fleet_optimization import router as fleet_optimization_router
-from backend.api.emergency_priority import router as emergency_priority_router
-from backend.config.database import Base, engine
+from backend.api.predictions import router as predictions_router, get_predictions_endpoint
+from backend.api.route_recommendations import router as route_recommendations_router, get_route_recommendations_endpoint
+from backend.api.fleet_optimization import router as fleet_optimization_router, get_fleet_optimization
+from backend.api.emergency_priority import router as emergency_priority_router, get_emergency_priority
+from backend.config.database import Base, engine, get_db
 from backend.services.gps_simulator import GPSSimulator
 
 
@@ -66,9 +67,23 @@ async def root():
     }
 
 
-@app.get("/health")
-async def health_check():
-    return {
-        "project": "UrbanFlow AI",
-        "status": "running"
-    }
+@app.get("/predictions")
+def predictions_no_slash(db: Session = Depends(get_db)):
+    return get_predictions_endpoint(db)
+
+
+@app.get("/route-recommendations")
+def route_recommendations_no_slash(db: Session = Depends(get_db)):
+    return get_route_recommendations_endpoint(db)
+
+
+@app.get("/fleet-optimization")
+def fleet_optimization_no_slash(db: Session = Depends(get_db)):
+    return get_fleet_optimization(db)
+
+
+@app.get("/emergency-priority")
+def emergency_priority_no_slash(db: Session = Depends(get_db)):
+    return get_emergency_priority(db)
+
+
