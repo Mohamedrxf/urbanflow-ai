@@ -23,7 +23,7 @@ def get_route_recommendations_endpoint(db: Session = Depends(get_db)):
     predictions = get_predictions(db=db, input_data={})
     routes = []
 
-    result = get_route_recommendations(
+    result, _ = get_route_recommendations(
         vehicles=vehicles,
         routes=routes,
         traffic=traffic,
