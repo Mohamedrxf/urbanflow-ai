@@ -1,6 +1,6 @@
 import json
 
-from backend.websocket.connection_manager import manager
+from backend.api.websocket import manager
 
 
 async def broadcast_event(event_name: str, payload: dict):

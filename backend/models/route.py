@@ -1,3 +1,4 @@
+from datetime import datetime
 from sqlalchemy import Column, Integer, String, Float, DateTime
 
 from backend.models.base import Base
@@ -15,4 +16,4 @@ class RouteOptimization(Base):
     estimated_time_min = Column(Float)
     optimized_time_min = Column(Float)
     status = Column(String)
-    created_at = Column(DateTime)
+    created_at = Column(DateTime, default=datetime.utcnow)

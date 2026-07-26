@@ -1,3 +1,4 @@
+from datetime import datetime
 from sqlalchemy import Column, Integer, String, Float, DateTime
 from sqlalchemy.orm import relationship
 
@@ -15,4 +16,4 @@ class Vehicle(Base):
     longitude = Column(Float)
     speed = Column(Float)
     status = Column(String)
-    created_at = Column(DateTime)
+    created_at = Column(DateTime, default=datetime.utcnow)
