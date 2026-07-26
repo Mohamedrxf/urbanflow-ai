@@ -1,3 +1,4 @@
+from datetime import datetime
 from sqlalchemy import Column, Integer, String, Float, DateTime
 
 from backend.models.base import Base
@@ -11,4 +12,4 @@ class Traffic(Base):
     congestion_level = Column(String)
     average_speed = Column(Float)
     travel_time = Column(Float)
-    timestamp = Column(DateTime)
+    timestamp = Column(DateTime, default=datetime.utcnow)

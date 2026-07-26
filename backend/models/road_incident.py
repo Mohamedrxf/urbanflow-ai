@@ -1,3 +1,4 @@
+from datetime import datetime
 from sqlalchemy import Column, Integer, String, Float, DateTime
 
 from backend.models.base import Base
@@ -13,4 +14,4 @@ class RoadIncident(Base):
     latitude = Column(Float)
     longitude = Column(Float)
     description = Column(String)
-    reported_at = Column(DateTime)
+    reported_at = Column(DateTime, default=datetime.utcnow)

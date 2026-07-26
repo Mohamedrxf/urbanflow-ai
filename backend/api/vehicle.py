@@ -17,6 +17,38 @@ from sqlalchemy.orm import Session
 router = APIRouter(prefix="/vehicles", tags=["Vehicles"])
 
 
+async def _broadcast_derived_updates(db: Session):
+    try:
+        vehicles = VehicleRepository(db).get_all()
+        traffic = TrafficRepository(db).get_all()
+        incidents = RoadIncidentRepository(db).get_all()
+        predictions = get_predictions(db=db, input_data={})
+        routes = RouteRepository(db).get_all()
+        _, payload = get_route_recommendations(vehicles, routes, traffic, predictions, incidents)
+        await manager.broadcast_route_recommendation(payload)
+        _, _, fleet_payload = get_fleet_optimization(vehicles, routes, traffic, predictions)
+        await manager.broadcast(json.dumps(fleet_payload))
+        emergency_results = []
+        for vehicle in vehicles:
+            priority = EmergencyPriorityEngine().calculate_priority(vehicle)
+            if priority.get("is_emergency"):
+                emergency_results.append({
+                    "vehicle_id": priority.get("vehicle_id"),
+                    "is_emergency": priority.get("is_emergency"),
+                    "priority_level": priority.get("priority_level"),
+                    "priority_score": priority.get("priority_score"),
+                    "recommended_action": priority.get("recommended_action"),
+                })
+        emergency_payload = {
+            "event": "emergency_priority_updated",
+            "emergency_vehicle_count": len(emergency_results),
+            "vehicles": emergency_results,
+        }
+        await manager.broadcast(json.dumps(emergency_payload))
+    except Exception:
+        pass
+
+
 @router.get("/", response_model=list[VehicleResponse])
 def list_vehicles(db=Depends(get_db)):
     repository = VehicleRepository(db)
@@ -43,27 +75,7 @@ async def create_vehicle(vehicle: VehicleCreate, db=Depends(get_db)):
         "timestamp": datetime.utcnow().isoformat(),
     })
     await manager.broadcast(message)
-    try:
-        vehicles = VehicleRepository(db).get_all()
-        traffic = TrafficRepository(db).get_all()
-        incidents = RoadIncidentRepository(db).get_all()
-        predictions = get_predictions(db=db, input_data={})
-        routes = RouteRepository(db).get_all()
-        _, payload = get_route_recommendations(vehicles, routes, traffic, predictions, incidents)
-        await manager.broadcast_route_recommendation(payload)
-        _, _, fleet_payload = get_fleet_optimization(vehicles, routes, traffic, predictions)
-        await manager.broadcast(json.dumps(fleet_payload))
-        emergency_results = []
-        for vehicle in vehicles:
-            emergency_results.append(EmergencyPriorityEngine().calculate_priority(vehicle))
-        emergency_payload = {
-            "event": "emergency_priority_updated",
-            "emergency_vehicle_count": sum(1 for r in emergency_results if r.get("is_emergency")),
-            "vehicles": emergency_results,
-        }
-        await manager.broadcast(json.dumps(emergency_payload))
-    except Exception:
-        pass
+    await _broadcast_derived_updates(db)
     return created
 
 
@@ -86,27 +98,7 @@ async def update_vehicle(vehicle_id: str, vehicle: VehicleUpdate, db: Session = 
         "timestamp": datetime.utcnow().isoformat(),
     })
     await manager.broadcast(message)
-    try:
-        vehicles = VehicleRepository(db).get_all()
-        traffic = TrafficRepository(db).get_all()
-        incidents = RoadIncidentRepository(db).get_all()
-        predictions = get_predictions(db=db, input_data={})
-        routes = RouteRepository(db).get_all()
-        _, payload = get_route_recommendations(vehicles, routes, traffic, predictions, incidents)
-        await manager.broadcast_route_recommendation(payload)
-        _, _, fleet_payload = get_fleet_optimization(vehicles, routes, traffic, predictions)
-        await manager.broadcast(json.dumps(fleet_payload))
-        emergency_results = []
-        for vehicle in vehicles:
-            emergency_results.append(EmergencyPriorityEngine().calculate_priority(vehicle))
-        emergency_payload = {
-            "event": "emergency_priority_updated",
-            "emergency_vehicle_count": sum(1 for r in emergency_results if r.get("is_emergency")),
-            "vehicles": emergency_results,
-        }
-        await manager.broadcast(json.dumps(emergency_payload))
-    except Exception:
-        pass
+    await _broadcast_derived_updates(db)
     return db_vehicle
 
 
@@ -126,25 +118,5 @@ async def delete_vehicle(vehicle_id: str, db: Session = Depends(get_db)):
         "timestamp": datetime.utcnow().isoformat(),
     })
     await manager.broadcast(message)
-    try:
-        vehicles = VehicleRepository(db).get_all()
-        traffic = TrafficRepository(db).get_all()
-        incidents = RoadIncidentRepository(db).get_all()
-        predictions = get_predictions(db=db, input_data={})
-        routes = RouteRepository(db).get_all()
-        _, payload = get_route_recommendations(vehicles, routes, traffic, predictions, incidents)
-        await manager.broadcast_route_recommendation(payload)
-        _, _, fleet_payload = get_fleet_optimization(vehicles, routes, traffic, predictions)
-        await manager.broadcast(json.dumps(fleet_payload))
-        emergency_results = []
-        for vehicle in vehicles:
-            emergency_results.append(EmergencyPriorityEngine().calculate_priority(vehicle))
-        emergency_payload = {
-            "event": "emergency_priority_updated",
-            "emergency_vehicle_count": sum(1 for r in emergency_results if r.get("is_emergency")),
-            "vehicles": emergency_results,
-        }
-        await manager.broadcast(json.dumps(emergency_payload))
-    except Exception:
-        pass
+    await _broadcast_derived_updates(db)
     return {"detail": "Vehicle deleted"}
