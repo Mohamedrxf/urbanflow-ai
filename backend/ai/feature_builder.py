@@ -2,6 +2,7 @@
 
 from datetime import datetime
 
+from backend.ai.levels import level_value
 from backend.repositories.vehicle_repository import VehicleRepository
 from backend.repositories.traffic_repository import TrafficRepository
 from backend.repositories.road_incident_repository import RoadIncidentRepository
@@ -35,16 +36,14 @@ def build_features(db):
     congestion_levels = [t.congestion_level for t in traffic_records if t.congestion_level]
     traffic_density = None
     if congestion_levels:
-        density_map = {"low": 1, "medium": 2, "high": 3}
-        traffic_density = sum(density_map.get(level.lower(), 0) for level in congestion_levels) / len(congestion_levels)
+        traffic_density = sum(level_value(level) for level in congestion_levels) / len(congestion_levels)
 
     incident_count = len(incidents)
-    severity_order = {"low": 1, "medium": 2, "high": 3}
     highest_severity = None
     if incidents:
         highest_severity = max(
             (i.severity for i in incidents if i.severity),
-            key=lambda s: severity_order.get(s.lower(), 0),
+            key=level_value,
             default=None,
         )
 

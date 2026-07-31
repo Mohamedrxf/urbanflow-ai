@@ -37,7 +37,7 @@ class FleetOptimizer:
             optimized_time = routes[0].optimized_time_min if routes and getattr(routes[0], "optimized_time_min", None) is not None else 0
             time_saved = estimated_time - optimized_time if estimated_time and optimized_time else 0
 
-            is_emergency = priorities[index].get("priority_level") in ("HIGH", "CRITICAL")
+            is_emergency = priorities[index].get("is_emergency")
             reroute_required = False
 
             if has_critical and not is_emergency:

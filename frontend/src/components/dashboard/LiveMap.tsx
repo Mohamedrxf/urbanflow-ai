@@ -2,6 +2,7 @@ import { useRef, useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { getCongestionMapColor, getSeverityMapColor } from "../../utils/levels";
 
 interface LiveMapProps {
   vehicles: Array<{
@@ -76,8 +77,7 @@ function VehicleMarker({ vehicle, onClick }: { vehicle: LiveMapProps["vehicles"]
 }
 
 function IncidentMarker({ incident }: { incident: LiveMapProps["incidents"][number] }) {
-  const severity = (incident.severity || "").toLowerCase();
-  const color = severity === "low" ? "yellow" : severity === "medium" ? "orange" : severity === "high" ? "red" : "gray";
+  const color = getSeverityMapColor(incident.severity);
 
   const position: [number, number] = [
     typeof incident.latitude === "number" ? incident.latitude : 40.7128,
@@ -143,8 +143,7 @@ export default function LiveMap({ vehicles, routes, traffic, incidents, selected
               (segment.latitude ?? 40.7128) + 0.002 + index * 0.002,
               (segment.longitude ?? -74.006) + 0.003 + index * 0.003,
             ];
-            const congestion = (segment.congestion_level || "").toLowerCase();
-            const color = congestion === "low" ? "green" : congestion === "medium" ? "yellow" : congestion === "high" ? "red" : "gray";
+            const color = getCongestionMapColor(segment.congestion_level);
             return (
               <Polyline
                 key={segment.traffic_id ?? index}

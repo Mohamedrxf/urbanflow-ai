@@ -1,7 +1,7 @@
-import api from "./api";
+import { createResourceService } from "./resourceService";
 
-export const getRoutes = () => api.get("/routes");
+const routes = createResourceService<string>("/routes");
 
-export const getRoute = (routeId: string) => api.get(`/routes/${routeId}`);
-
-export const createRoute = (data: unknown) => api.post("/routes", data);
+export const getRoutes = routes.list;
+export const getRoute = routes.get;
+export const createRoute = routes.create;

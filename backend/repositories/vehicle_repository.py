@@ -1,20 +1,9 @@
 from backend.models.vehicle import Vehicle
-from backend.schemas.vehicle import VehicleCreate
+from backend.repositories.base_repository import BaseRepository
 
 
-class VehicleRepository:
-    def __init__(self, db):
-        self.db = db
+class VehicleRepository(BaseRepository[Vehicle]):
+    model = Vehicle
 
-    def get_all(self):
-        return self.db.query(Vehicle).all()
-
-    def get_by_vehicle_id(self, vehicle_id: str):
-        return self.db.query(Vehicle).filter(Vehicle.vehicle_id == vehicle_id).first()
-
-    def create(self, vehicle: VehicleCreate):
-        db_vehicle = Vehicle(**vehicle.model_dump())
-        self.db.add(db_vehicle)
-        self.db.commit()
-        self.db.refresh(db_vehicle)
-        return db_vehicle
+    def get_by_vehicle_id(self, vehicle_id: str) -> Vehicle | None:
+        return self.get_by_field("vehicle_id", vehicle_id)
