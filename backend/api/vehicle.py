@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 import json
+import logging
+from datetime import datetime
 
 from backend.config.database import get_db
 from backend.repositories.vehicle_repository import VehicleRepository
@@ -13,6 +15,8 @@ from backend.repositories.route_repository import RouteRepository
 from backend.ai.prediction_service import get_predictions
 from backend.ai.emergency_priority import EmergencyPriorityEngine
 from sqlalchemy.orm import Session
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/vehicles", tags=["Vehicles"])
 
@@ -46,7 +50,7 @@ async def _broadcast_derived_updates(db: Session):
         }
         await manager.broadcast(json.dumps(emergency_payload))
     except Exception:
-        pass
+        logger.exception("Failed to broadcast derived vehicle updates")
 
 
 @router.get("/", response_model=list[VehicleResponse])
@@ -89,8 +93,6 @@ async def update_vehicle(vehicle_id: str, vehicle: VehicleUpdate, db: Session = 
         setattr(db_vehicle, key, value)
     db.commit()
     db.refresh(db_vehicle)
-    import json
-    from datetime import datetime
     message = json.dumps({
         "event": "vehicle_updated",
         "action": "update",
@@ -109,8 +111,6 @@ async def delete_vehicle(vehicle_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Vehicle not found")
     db.delete(db_vehicle)
     db.commit()
-    import json
-    from datetime import datetime
     message = json.dumps({
         "event": "vehicle_updated",
         "action": "delete",

@@ -1,5 +1,9 @@
 import json
+import logging
+
 from fastapi import WebSocket
+
+logger = logging.getLogger(__name__)
 
 
 class ConnectionManager:
@@ -18,11 +22,18 @@ class ConnectionManager:
         await websocket.send_text(message)
 
     async def broadcast(self, message: str):
+        stale_connections = []
         for connection in self.active_connections[:]:
             try:
                 await connection.send_text(message)
             except Exception:
-                self.active_connections.remove(connection)
+                logger.warning(
+                    "Failed to send message to a WebSocket connection; dropping it",
+                    exc_info=True,
+                )
+                stale_connections.append(connection)
+        for connection in stale_connections:
+            self.disconnect(connection)
 
     async def broadcast_route_recommendation(self, payload: dict):
         await self.broadcast(json.dumps(payload))
