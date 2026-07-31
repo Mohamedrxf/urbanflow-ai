@@ -1,3 +1,6 @@
+const WS_URL =
+  import.meta.env.VITE_WS_URL ?? "ws://localhost:8000/ws/dashboard";
+
 class WebSocketService {
   private ws: WebSocket | null = null;
   private messageCallback: ((message: string) => void) | null = null;
@@ -7,7 +10,12 @@ class WebSocketService {
       return;
     }
 
-    this.ws = new WebSocket("ws://localhost:8000/ws/dashboard");
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      return;
+    }
+
+    this.ws = new WebSocket(`${WS_URL}?token=${encodeURIComponent(token)}`);
 
     this.ws.onopen = () => {
       console.log("WebSocket connected");

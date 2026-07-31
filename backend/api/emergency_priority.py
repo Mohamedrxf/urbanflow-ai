@@ -4,8 +4,9 @@ from sqlalchemy.orm import Session
 from backend.config.database import get_db
 from backend.repositories.vehicle_repository import VehicleRepository
 from backend.ai.emergency_priority import EmergencyPriorityEngine
+from backend.core.deps import get_current_user
 
-router = APIRouter(prefix="/emergency-priority", tags=["Emergency Priority"])
+router = APIRouter(prefix="/emergency-priority", tags=["Emergency Priority"], dependencies=[Depends(get_current_user)])
 
 
 @router.get("/")
