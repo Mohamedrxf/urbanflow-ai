@@ -1,11 +1,14 @@
 import asyncio
 import json
+import logging
 import random
 from datetime import datetime, timezone
 
 from backend.api.websocket import manager
 from backend.config.database import SessionLocal
 from backend.models.vehicle import Vehicle
+
+logger = logging.getLogger(__name__)
 
 
 class GPSSimulator:
@@ -38,7 +41,7 @@ class GPSSimulator:
             except asyncio.CancelledError:
                 raise
             except Exception:
-                pass
+                logger.exception("GPS simulator tick failed; continuing")
             await asyncio.sleep(self.interval)
 
     async def _tick(self):
