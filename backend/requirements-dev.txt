@@ -1,0 +1,7 @@
+-r requirements.txt
+pytest==8.3.3
+pytest-asyncio==0.24.0
+pytest-cov==5.0.0
+email-validator==2.2.0
+# passlib 1.7.4 is incompatible with bcrypt >= 4.1 (reads bcrypt.__about__).
+bcrypt==4.0.1
