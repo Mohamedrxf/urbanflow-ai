@@ -1,5 +1,7 @@
 """Route scoring module for traffic route optimization."""
 
+from backend.ai.levels import level_value
+
 
 def score_route(route, traffic, prediction, incidents):
     """Generate a score for a route based on traffic, prediction, and incidents.
@@ -19,17 +21,8 @@ def score_route(route, traffic, prediction, incidents):
     weight_distance = 0.10
     weight_speed = 0.25
 
-    traffic_penalty = 0.0
-    if traffic:
-        congestion_level = (traffic.congestion_level or "").lower()
-        congestion_map = {"low": 1, "medium": 2, "high": 3}
-        traffic_penalty = congestion_map.get(congestion_level, 0)
-
-    prediction_penalty = 0.0
-    if prediction:
-        predicted_level = (prediction.predicted_congestion or "").lower()
-        prediction_map = {"low": 1, "medium": 2, "high": 3}
-        prediction_penalty = prediction_map.get(predicted_level, 0)
+    traffic_penalty = level_value(traffic.congestion_level) if traffic else 0.0
+    prediction_penalty = level_value(prediction.predicted_congestion) if prediction else 0.0
 
     incident_penalty = len(incidents) if incidents else 0.0
     distance_penalty = route.distance_km if hasattr(route, "distance_km") and route.distance_km is not None else 0.0

@@ -1,10 +1,7 @@
 """Traffic prediction module."""
 
-from datetime import datetime
+from backend.ai.levels import level_value
 
-
-_CONGESTION_MAP = {"low": 1, "medium": 2, "high": 3}
-_SEVERITY_MAP = {"low": 1, "medium": 2, "high": 3}
 _MAX_SCORE = 0.4 * 3 + 0.3 * 3 + 0.2 * 3 + 0.1 * 1
 
 
@@ -26,9 +23,9 @@ def predict_traffic(features):
         current_hour = feature.get("current_hour", 0)
         weekend_flag = feature.get("weekend_flag", 0)
 
-        congestion_value = _CONGESTION_MAP.get(congestion_level, 0)
+        congestion_value = level_value(congestion_level)
         density_value = traffic_density if isinstance(traffic_density, (int, float)) else 0
-        severity_value = _SEVERITY_MAP.get(highest_severity, 0)
+        severity_value = level_value(highest_severity)
 
         is_peak_hour = 1 if (7 <= current_hour <= 10 or 17 <= current_hour <= 20) else 0
 
