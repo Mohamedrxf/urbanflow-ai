@@ -9,8 +9,9 @@ from backend.repositories.road_incident_repository import RoadIncidentRepository
 from backend.ai.fleet_optimizer import FleetOptimizer
 from backend.ai.fleet_scorer import FleetScorer
 from backend.ai.prediction_service import get_predictions
+from backend.core.deps import get_current_user
 
-router = APIRouter(prefix="/fleet-optimization", tags=["Fleet Optimization"])
+router = APIRouter(prefix="/fleet-optimization", tags=["Fleet Optimization"], dependencies=[Depends(get_current_user)])
 
 
 @router.get("/")

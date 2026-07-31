@@ -12,9 +12,10 @@ from backend.models.vehicle import Vehicle
 from backend.repositories.route_repository import RouteRepository
 from backend.ai.prediction_service import get_predictions
 from backend.ai.emergency_priority import EmergencyPriorityEngine
+from backend.core.deps import get_current_user
 from sqlalchemy.orm import Session
 
-router = APIRouter(prefix="/vehicles", tags=["Vehicles"])
+router = APIRouter(prefix="/vehicles", tags=["Vehicles"], dependencies=[Depends(get_current_user)])
 
 
 async def _broadcast_derived_updates(db: Session):

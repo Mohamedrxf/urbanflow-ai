@@ -3,8 +3,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from backend.config.database import get_db
 from backend.repositories.traffic_repository import TrafficRepository
 from backend.schemas.traffic import TrafficCreate, TrafficResponse
+from backend.core.deps import get_current_user
 
-router = APIRouter(prefix="/traffic", tags=["Traffic"])
+router = APIRouter(prefix="/traffic", tags=["Traffic"], dependencies=[Depends(get_current_user)])
 
 
 @router.get("/", response_model=list[TrafficResponse])

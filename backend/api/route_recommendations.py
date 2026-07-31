@@ -7,8 +7,9 @@ from backend.repositories.traffic_repository import TrafficRepository
 from backend.repositories.road_incident_repository import RoadIncidentRepository
 from backend.ai.prediction_service import get_predictions
 from backend.config.database import get_db
+from backend.core.deps import get_current_user
 
-router = APIRouter(prefix="/route-recommendations", tags=["Route Recommendations"])
+router = APIRouter(prefix="/route-recommendations", tags=["Route Recommendations"], dependencies=[Depends(get_current_user)])
 
 
 @router.get("/")

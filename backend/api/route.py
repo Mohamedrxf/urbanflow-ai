@@ -3,8 +3,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from backend.config.database import get_db
 from backend.repositories.route_repository import RouteRepository
 from backend.schemas.route import RouteCreate, RouteResponse
+from backend.core.deps import get_current_user
 
-router = APIRouter(prefix="/routes", tags=["Routes"])
+router = APIRouter(prefix="/routes", tags=["Routes"], dependencies=[Depends(get_current_user)])
 
 
 @router.get("/", response_model=list[RouteResponse])

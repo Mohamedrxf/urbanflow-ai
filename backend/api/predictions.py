@@ -3,9 +3,10 @@ from fastapi import APIRouter, Depends
 from backend.ai.prediction_service import get_predictions
 from backend.config.database import get_db
 from backend.websocket.broadcast import broadcast_event
+from backend.core.deps import get_current_user
 from sqlalchemy.orm import Session
 
-router = APIRouter(prefix="/predictions", tags=["Predictions"])
+router = APIRouter(prefix="/predictions", tags=["Predictions"], dependencies=[Depends(get_current_user)])
 
 
 @router.post("/")
